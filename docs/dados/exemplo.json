@@ -1,0 +1,4 @@
+{
+  "mensagem": "Este arquivo veio de docs/dados/exemplo.json, entregue pelo Worker.",
+  "itens": ["Primeiro item", "Segundo item", "Terceiro item"]
+}

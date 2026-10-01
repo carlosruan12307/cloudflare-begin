@@ -1,0 +1,15 @@
+{
+  "name": "cloudflare-begin",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "deploy": "node build.mjs && wrangler deploy",
+    "acesso": "node scripts/acesso.mjs",
+    "logs": "wrangler tail"
+  },
+  "devDependencies": {
+    "javascript-obfuscator": "^4.1.1",
+    "wrangler": "^4.86.0"
+  }
+}

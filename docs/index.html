@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minha Ferramenta</title>
+    <!-- Caminho RELATIVO: o build transforma no endereço do servidor -->
+    <link rel="stylesheet" href="css/estilo.css">
+</head>
+<body>
+    <main class="card">
+        <h1>Minha Ferramenta</h1>
+        <p class="sub">Exemplo do projeto <b>cloudflare-begin</b>. Troque este conteúdo pelo seu.</p>
+
+        <nav>
+            <a href="index.html" class="ativo">Início</a>
+            <!-- Link para outra página da pasta docs/ -->
+            <a href="sobre.html">Sobre</a>
+        </nav>
+
+        <section>
+            <h2>1. Ler um curso do Moodle</h2>
+            <p>Digite o ID de um curso (o número no fim do endereço <code>course/view.php?id=...</code>).</p>
+            <div class="linha">
+                <input id="curso-id" type="text" placeholder="Ex.: 12345">
+                <!-- Botão chamando uma função JS: ela precisa estar em window (veja js/app.js) -->
+                <button onclick="lerCurso()">Ler curso</button>
+            </div>
+            <div id="resultado" class="resultado"></div>
+        </section>
+
+        <section>
+            <h2>2. Ler um arquivo da própria ferramenta</h2>
+            <p>Busca <code>docs/dados/exemplo.json</code> pelo servidor.</p>
+            <button onclick="lerDados()">Carregar dados</button>
+            <div id="dados" class="resultado"></div>
+        </section>
+
+        <section>
+            <h2>Registro</h2>
+            <pre id="log" class="log"></pre>
+        </section>
+    </main>
+
+    <!-- Seu JavaScript. type="module" permite usar import/export entre arquivos. -->
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>

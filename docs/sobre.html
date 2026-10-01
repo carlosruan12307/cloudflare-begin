@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sobre - Minha Ferramenta</title>
+    <link rel="stylesheet" href="css/estilo.css">
+</head>
+<body>
+    <main class="card">
+        <h1>Sobre</h1>
+        <nav>
+            <a href="index.html">Início</a>
+            <a href="sobre.html" class="ativo">Sobre</a>
+        </nav>
+        <p>Esta é uma segunda página, só para mostrar como funciona a navegação.</p>
+        <p>O link <code>sobre.html</code> foi trocado pelo build para <code>#sobre.html</code>.
+           O carregador lê o que vem depois do <code>#</code> e busca a página certa no servidor.</p>
+        <p id="hora"></p>
+    </main>
+
+    <!-- Script simples, sem módulo, escrito direto no HTML: também é ofuscado -->
+    <script>
+        document.getElementById('hora').textContent = 'Página carregada às ' + new Date().toLocaleTimeString('pt-BR');
+    </script>
+</body>
+</html>

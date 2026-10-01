@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minha Ferramenta</title>
+<style>
+    body { font-family: system-ui, sans-serif; background: #f4f6fa; color: #333; display: flex; justify-content: center; padding: 60px 16px; margin: 0; }
+    .box { background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,.08); padding: 28px; max-width: 380px; width: 100%; }
+    h1 { font-size: 20px; margin: 0 0 8px; }
+    p { font-size: 14px; color: #666; margin: 0 0 16px; }
+    input { width: 100%; box-sizing: border-box; padding: 10px; font-size: 14px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 12px; }
+    button { width: 100%; padding: 10px; font-size: 14px; border: 0; border-radius: 8px; background: #2563eb; color: #fff; cursor: pointer; }
+    button:disabled { opacity: .6; cursor: default; }
+    .err { color: #c0392b; font-size: 13px; min-height: 18px; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+<div class="box" id="sm-box"><p id="sm-status">Carregando…</p></div>
+<script>
+(function () {
+    var SERVER = %%SERVER_URL%%;
+    var KEY_STORE = 'sm_chave_acesso';
+    var TOKEN_STORE = 'sm_token_acesso';
+
+    function store(kind) { try { return kind === 'local' ? localStorage : sessionStorage; } catch (e) { return null; } }
+    function get(kind, k) { var s = store(kind); try { return s ? s.getItem(k) : null; } catch (e) { return null; } }
+    function set(kind, k, v) { var s = store(kind); try { if (s) { v === null ? s.removeItem(k) : s.setItem(k, v); } } catch (e) {} }
+
+    function routeOf(u) { return ((String(u).split('#')[1] || '').split('&')[0]) || 'index'; }
+
+    function cachedToken() {
+        try {
+            var t = JSON.parse(get('session', TOKEN_STORE) || 'null');
+            if (t && t.token && t.exp * 1000 > Date.now() + 60000) return t.token;
+        } catch (e) {}
+        return null;
+    }
+
+    function auth(key) {
+        return fetch(SERVER + '/auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key: key })
+        }).then(function (r) {
+            if (r.status === 401) { var e = new Error('Chave inválida ou revogada.'); e.denied = true; throw e; }
+            if (!r.ok) throw new Error('Servidor respondeu ' + r.status);
+            return r.json();
+        }).then(function (d) {
+            set('session', TOKEN_STORE, JSON.stringify({ token: d.token, exp: d.exp }));
+            return d.token;
+        });
+    }
+
+    function askKey(msg) {
+        var box = document.getElementById('sm-box');
+        box.innerHTML = '<h1>Minha Ferramenta</h1>'
+            + '<p>Acesso restrito. Informe a chave de acesso que você recebeu.</p>'
+            + '<form id="sm-form"><input id="sm-key" type="password" autocomplete="off" placeholder="Chave de acesso" required>'
+            + '<div class="err" id="sm-err"></div><button id="sm-btn" type="submit">Entrar</button></form>';
+        document.getElementById('sm-err').textContent = msg || '';
+        document.getElementById('sm-form').onsubmit = function (ev) {
+            ev.preventDefault();
+            var key = document.getElementById('sm-key').value.trim();
+            var btn = document.getElementById('sm-btn');
+            btn.disabled = true;
+            auth(key).then(function (token) {
+                set('local', KEY_STORE, key);
+                load(token, true);
+            }).catch(function (e) {
+                btn.disabled = false;
+                document.getElementById('sm-err').textContent = e.message;
+            });
+        };
+        document.getElementById('sm-key').focus();
+    }
+
+    function load(token, fresh) {
+        var base = SERVER + '/t/' + token;
+        var route = routeOf(location.href);
+        if (!/^[\w\-\/.]+$/.test(route) || route.indexOf('..') !== -1) route = 'index';
+        var file = route === 'index' ? 'index.html'
+                 : /\.html$/.test(route) ? route
+                 : route + '/index.html';
+
+        fetch(base + '/' + file, { cache: 'no-store' })
+            .then(function (r) {
+                if (r.status === 401) { set('session', TOKEN_STORE, null); var e = new Error('Acesso expirado ou revogado.'); e.denied = true; throw e; }
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return r.text();
+            })
+            .then(function (html) {
+                html = html.split('%%BASE%%').join(base);
+                var boot = '<script>window.__SM_BASE=' + JSON.stringify(base) + ';'
+                    + 'addEventListener("hashchange",function(e){'
+                    + 'function r(u){return((String(u).split("#")[1]||"").split("&")[0])||"index"}'
+                    + 'if(r(e.oldURL)!==r(e.newURL))location.reload()});<\/script>';
+                html = /<head[^>]*>/i.test(html) ? html.replace(/<head[^>]*>/i, function (m) { return m + boot; }) : boot + html;
+                document.open();
+                document.write(html);
+                document.close();
+            })
+            .catch(function (e) {
+                if (e.denied) { if (fresh) askKey(e.message); else start(true); return; }
+                document.getElementById('sm-box').innerHTML = '<p>Erro ao carregar: ' + e.message + '</p>';
+            });
+    }
+
+    function start(retry) {
+        var token = retry ? null : cachedToken();
+        if (token) { load(token); return; }
+        var key = get('local', KEY_STORE);
+        if (!key) { askKey(); return; }
+        auth(key).then(function (t) { load(t, true); }).catch(function (e) {
+            if (e.denied) set('local', KEY_STORE, null);
+            askKey(e.message);
+        });
+    }
+
+    start(false);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+{
+  // Nome do Worker. Ele aparece no endereço: https://<name>.<seu-subdominio>.workers.dev
+  "name": "cloudflare-begin",
+  "main": "worker/index.js",
+  "compatibility_date": "2025-09-01",
+  "workers_dev": true,
+
+  // A pasta .publicar (gerada a partir de docs/) só sai pelo Worker, que exige token válido.
+  "assets": {
+    "directory": "./.publicar",
+    "binding": "ASSETS",
+    "run_worker_first": true,
+    "html_handling": "none",
+    "not_found_handling": "none"
+  },
+
+  // O comando "npx wrangler kv namespace create CHAVES" adiciona o KV aqui sozinho.
+  // Deve existir UMA entrada só, com "binding": "CHAVES".
+  "kv_namespaces": [],
+
+  "vars": {
+    // Endereço do Moodle que pode usar a ferramenta (sem barra no final).
+    // Mais de um: separe por vírgula.
+    "ALLOWED_ORIGINS": "https://ead.unifor.br",
+    // Por quantas horas a pessoa fica conectada depois de digitar a chave
+    "TOKEN_TTL_HOURS": "8"
+  }
+}
